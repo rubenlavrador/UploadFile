@@ -31,7 +31,7 @@ import (
 type SimpleChaincode struct {
 }
 
-func (t *SimpleChaincode) Init(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
+func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	fmt.Printf("Init called, initializing chaincode")
 	
 	var A, B string    // Entities
@@ -70,7 +70,7 @@ func (t *SimpleChaincode) Init(stub *shim.ChaincodeStub, function string, args [
 }
 
 // Transaction makes payment of X units from A to B
-func (t *SimpleChaincode) invoke(stub *shim.ChaincodeStub, args []string) ([]byte, error) {
+func (t *SimpleChaincode) invoke(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	fmt.Printf("Running invoke")
 	
 	var A, B string    // Entities
@@ -126,7 +126,7 @@ func (t *SimpleChaincode) invoke(stub *shim.ChaincodeStub, args []string) ([]byt
 }
 
 // Deletes an entity from state
-func (t *SimpleChaincode) delete(stub *shim.ChaincodeStub, args []string) ([]byte, error) {
+func (t *SimpleChaincode) delete(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	fmt.Printf("Running delete")
 	
 	if len(args) != 1 {
@@ -146,7 +146,7 @@ func (t *SimpleChaincode) delete(stub *shim.ChaincodeStub, args []string) ([]byt
 
 // Invoke callback representing the invocation of a chaincode
 // This chaincode will manage two accounts A and B and will transfer X units from A to B upon invoke
-func (t *SimpleChaincode) Invoke(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
+func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	fmt.Printf("Invoke called, determining function")
 	
 	// Handle different functions
@@ -161,12 +161,14 @@ func (t *SimpleChaincode) Invoke(stub *shim.ChaincodeStub, function string, args
 		// Deletes an entity from its state
 		fmt.Printf("Function is delete")
 		return t.delete(stub, args)
+	} else if function == "write" {
+		return t.write(stub, args)
 	}
 
 	return nil, errors.New("Received unknown function invocation")
 }
 
-func (t* SimpleChaincode) Run(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
+func (t* SimpleChaincode) Run(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	fmt.Printf("Run called, passing through to Invoke (same function)")
 	
 	// Handle different functions
@@ -187,7 +189,7 @@ func (t* SimpleChaincode) Run(stub *shim.ChaincodeStub, function string, args []
 }
 
 // Query callback representing the query of a chaincode
-func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
+func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	fmt.Printf("Query called, determining function")
 	
 	if function != "query" {
@@ -219,6 +221,27 @@ func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args 
 	fmt.Printf("Query Response:%s\n", jsonResp)
 	return Avalbytes, nil
 }
+
+// write - invoke function to write key/value pair
+func (t *SimpleChaincode) write(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	var key, value string
+	var err error
+	fmt.Println("running write()")
+
+	if len(args) != 2 {
+		return nil, errors.New("Incorrect number of arguments. Expecting 2. name of the key and value to set")
+	}
+
+	key = args[0] //rename for funsies
+	value = args[1]
+	err = stub.PutState(key, []byte(value)) //write the variable into the chaincode state
+	if err != nil {
+		return nil, err
+	}
+	return nil, nil
+}
+
+
 
 func main() {
 	err := shim.Start(new(SimpleChaincode))
