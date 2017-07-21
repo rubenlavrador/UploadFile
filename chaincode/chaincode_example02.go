@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"strconv"
 	"time"
+	"encoding/json"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 )
@@ -34,40 +35,15 @@ type SimpleChaincode struct {
 
 func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	fmt.Printf("Init called, initializing chaincode")
-	
-	var A, B string    // Entities
-	var Aval, Bval int // Asset holdings
 	var err error
-
-	if len(args) != 4 {
-		return nil, errors.New("Incorrect number of arguments. Expecting 4")
-	}
-
-	// Initialize the chaincode
-	A = args[0]
-	Aval, err = strconv.Atoi(args[1])
-	if err != nil {
-		return nil, errors.New("Expecting integer value for asset holding")
-	}
-	B = args[2]
-	Bval, err = strconv.Atoi(args[3])
-	if err != nil {
-		return nil, errors.New("Expecting integer value for asset holding")
-	}
-	fmt.Printf("Aval = %d, Bval = %d\n", Aval, Bval)
-
-	// Write the state to the ledger
-	err = stub.PutState(A, []byte(strconv.Itoa(Aval)))
+	
+	err = stub.PutState("initial", []byte("john")) //write the variable into the chaincode state
 	if err != nil {
 		return nil, err
 	}
-
-	err = stub.PutState(B, []byte(strconv.Itoa(Bval)))
-	if err != nil {
-		return nil, err
-	}
-
-	return nil, nil
+	
+	
+	return nil,nil
 }
 
 // Transaction makes payment of X units from A to B
@@ -165,12 +141,12 @@ func (t *SimpleChaincode) listAllVariables(stub shim.ChaincodeStubInterface, arg
 			fmt.Printf("key %d contains %s\n", key, value)
 		}
 
-//		jsonKeys, err := json.Marshal(keys)
-//		if err != nil {
-//			return nil, errors.New(fmt.Sprintf("keys operation failed. Error marshaling JSON: %s", err))
-//		}
+		jsonKeys, err := json.Marshal(keys)
+		if err != nil {
+			return nil, errors.New(fmt.Sprintf("keys operation failed. Error marshaling JSON: %s", err))
+		}
 
-		return nil, nil
+		return jsonKeys, nil
 }
 
 
@@ -214,9 +190,7 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 		fmt.Printf("Function is delete")
 		return t.delete(stub, args)
 	} else if function == "write" {
-		return t.listAllVariables(stub, args)
-	} else if function == "listAllVariables" {
-		return t.listAllVariables(stub, args)
+		return t.write(stub, args)
 	}
 
 	return nil, errors.New("Received unknown function invocation")
@@ -247,6 +221,9 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 	fmt.Printf("Query called, determining function")
 	
 	if function != "query" {
+		if function == "listAllVariables" {
+		return t.listAllVariables(stub, args)
+	}
 		fmt.Printf("Function is query")
 		return nil, errors.New("Invalid query function name. Expecting \"query\"")
 	}
