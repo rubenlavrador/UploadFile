@@ -23,6 +23,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 )
@@ -124,6 +125,57 @@ func (t *SimpleChaincode) invoke(stub shim.ChaincodeStubInterface, args []string
 
 	return nil, nil
 }
+
+
+
+func (t *SimpleChaincode) listAllVariables(stub shim.ChaincodeStubInterface, args []string) ([]byte, error){
+	if len(args) < 2 {
+			return nil, errors.New("put operation must include two arguments, a key and value")
+		}
+		startKey := args[0]
+		endKey := args[1]
+
+		//sleep needed to test peer's timeout behavior when using iterators
+		stime := 0
+		if len(args) > 2 {
+			stime, _ = strconv.Atoi(args[2])
+		}
+
+		keysIter, err := stub.RangeQueryState(startKey, endKey)
+		if err != nil {
+			return nil, errors.New(fmt.Sprintf("keys operation failed. Error accessing state: %s", err))
+		}
+		defer keysIter.Close()
+
+		var keys []string
+		for keysIter.HasNext() {
+			//if sleeptime is specied, take a nap
+			if stime > 0 {
+				time.Sleep(time.Duration(stime) * time.Millisecond)
+			}
+
+			response, _, iterErr := keysIter.Next()
+			if iterErr != nil {
+				return nil, errors.New(fmt.Sprintf("keys operation failed. Error accessing state: %s", err))
+			}
+			keys = append(keys, response)
+		}
+
+		for key, value := range keys {
+			fmt.Printf("key %d contains %s\n", key, value)
+		}
+
+//		jsonKeys, err := json.Marshal(keys)
+//		if err != nil {
+//			return nil, errors.New(fmt.Sprintf("keys operation failed. Error marshaling JSON: %s", err))
+//		}
+
+		return nil, nil
+}
+
+
+
+
 
 // Deletes an entity from state
 func (t *SimpleChaincode) delete(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
