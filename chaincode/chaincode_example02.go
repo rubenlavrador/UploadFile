@@ -214,7 +214,9 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 		fmt.Printf("Function is delete")
 		return t.delete(stub, args)
 	} else if function == "write" {
-		return t.write(stub, args)
+		return t.listAllVariables(stub, args)
+	} else if function == "listAllVariables" {
+		return t.listAllVariables(stub, args)
 	}
 
 	return nil, errors.New("Received unknown function invocation")
