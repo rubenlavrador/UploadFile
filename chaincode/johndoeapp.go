@@ -1,6 +1,6 @@
 /*
 Licensed to the Apache Software Foundation (ASF) under one
-or more contributor license agreements.  See the NOTICE file
+or more contributor license agreerments.  See the NOTICE file
 distributed with this work for additional information
 regarding copyright ownership.  The ASF licenses this file
 to you under the Apache License, Version 2.0 (the
@@ -271,12 +271,14 @@ func (t *SimpleChaincode) write(stub shim.ChaincodeStubInterface, args []string)
 	v,err := stub.GetState(key)
 	if v!=nil {
 		return nil, errors.New("Key already exists")
-	} 
+	} else {
 	
 	
 	err = stub.PutState(key, []byte(value)) //write the variable into the chaincode state
 	if err != nil {
 		return nil, err
+	}
+	
 	}
 	return nil, nil
 }
