@@ -257,6 +257,8 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 func (t *SimpleChaincode) write(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	var key, value string
 	var err error
+	
+
 	fmt.Println("running write()")
 
 	if len(args) != 2 {
@@ -265,6 +267,13 @@ func (t *SimpleChaincode) write(stub shim.ChaincodeStubInterface, args []string)
 
 	key = args[0] //rename for funsies
 	value = args[1]
+	
+	v,err := stub.GetState(key)
+	if v!=nil {
+		return nil, errors.New("Key already exists")
+	} 
+	
+	
 	err = stub.PutState(key, []byte(value)) //write the variable into the chaincode state
 	if err != nil {
 		return nil, err
