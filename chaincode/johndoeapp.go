@@ -211,7 +211,12 @@ func (t* SimpleChaincode) Run(stub shim.ChaincodeStubInterface, function string,
 		// Deletes an entity from its state
 		fmt.Printf("Function is delete")
 		return t.delete(stub, args)
+	} else if function == "verify" {
+		// Verify an entity from its state
+		fmt.Printf("Function is verify")
+		return t.verifyFile(stub, args)
 	}
+	
 
 	return nil, errors.New("Received unknown function invocation")
 }
@@ -282,6 +287,49 @@ func (t *SimpleChaincode) write(stub shim.ChaincodeStubInterface, args []string)
 	}
 	return nil, nil
 }
+
+
+
+
+// VerifyFile - invoke function to write key/value pair
+func (t *SimpleChaincode) verifyFile(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	var key, value,vstring string
+	var err error
+	
+
+	fmt.Println("running verifyFile()")
+
+	if len(args) != 2 {
+		return nil, errors.New("Incorrect number of arguments. Expecting 2. name of the key and value to set")
+	}
+
+	key = args[0] //rename for funsies
+	value = args[1]
+	
+	v,err := stub.GetState(key)
+	if err != nil {
+		return nil, errors.New("Failed to get state")
+	}
+	if v==nil {
+		return nil, errors.New("NIF doesn't exist")
+	} else {
+		
+		vstring = string(v)
+		if vstring==value {
+			return nil,nil
+		} else { 
+			
+			return nil, errors.New("No Match")
+		}
+		
+		
+	}
+	return nil, nil
+}
+
+
+
+
 
 
 
