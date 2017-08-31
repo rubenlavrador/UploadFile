@@ -191,6 +191,10 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 		return t.delete(stub, args)
 	} else if function == "write" {
 		return t.write(stub, args)
+	} else if function == "verify" {
+		// Verify an entity from its state
+		fmt.Printf("Function is verify")
+		return t.verifyFile(stub, args)
 	}
 
 	return nil, errors.New("Received unknown function invocation")
@@ -211,10 +215,6 @@ func (t* SimpleChaincode) Run(stub shim.ChaincodeStubInterface, function string,
 		// Deletes an entity from its state
 		fmt.Printf("Function is delete")
 		return t.delete(stub, args)
-	} else if function == "verify" {
-		// Verify an entity from its state
-		fmt.Printf("Function is verify")
-		return t.verifyFile(stub, args)
 	}
 	
 
